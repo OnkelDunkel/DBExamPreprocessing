@@ -26,7 +26,8 @@ CREATE TABLE books (
 CREATE TABLE cities (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	name NVARCHAR(200),
-	location POINT
+	latitude DECIMAL(7,5),
+	longtitude DECIMAL(8,5)
 );
 CREATE TABLE books_cities (
 	bookid INT NOT NULL,
