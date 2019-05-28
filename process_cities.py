@@ -98,7 +98,7 @@ for file_name in txt_files:
 			
 			if(char_count >= max_file_length):
 				print("No of chars: {}".format(char_count))
-				print("---------------FILE BIG---------------")
+				print("---------------BIG FILE---------------")
 				large_files += 1
 			
 			city_names = []
@@ -126,14 +126,6 @@ for file_name in txt_files:
 			
 
 status()
-#print("big_files: {}".format(large_files))
-#print("total_errors: {}".format(total_errors))
-#print("format_errors: {}".format(total_errors))
-#print("encoding_errors: {}".format(total_errors))
-#time_diff = datetime.datetime.now() - now
-#print("seconds: {}".format(time_diff.total_seconds()))
-#print("minutes: {}".format(time_diff.total_seconds()/60))
-#print("NO of files: {}".format(len(txt_files)))
 
 #print(json.dumps(books))
 

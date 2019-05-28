@@ -8,7 +8,7 @@ DROP DATABASE IF EXISTS examdb;
 CREATE DATABASE examdb;
 
 GRANT DELETE, INSERT, SELECT, UPDATE ON examdb.* TO dbexamuser@localhost;
-GRANT DELETE, INSERT, SELECT, UPDATE ON examdb.* TO dbexamuser@%;
+GRANT DELETE, INSERT, SELECT, UPDATE ON examdb.* TO dbexamuser@'%';
 FLUSH PRIVILEGES;
 
 USE examdb;
