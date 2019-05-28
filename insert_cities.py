@@ -7,6 +7,7 @@ from mysql.connector.cursor import MySQLCursorPrepared
 df = pd.read_csv("worldcitiespop.csv")
 
 def clean_cities():
+	global df
 	print("City count before clean: {}".format(df.count()[0]))
 	
 	df = df[df["AccentCity"].notna()]
@@ -29,74 +30,55 @@ def open_con():
 	)
 	con.autocommit = False
 	mycursor = con.cursor(cursor_class=MySQLCursorPrepared)
-	return con, cursor
+	return con, mycursor
 
 def insert_cities():
-    now = datetime.datetime.now()
-    large_sql = ""
-    counter = 1
-    interval_counter = 0
-    interval = 1000
+	global con, mycursor
+	now = datetime.datetime.now()
+	counter = 1
+	interval_counter = 0
+	commit_interval = 1000
 	
+	sql = "INSERT INTO examdb.cities (name, location) VALUES (%s, Point(%s , %s));"
 	
-	sql = """INSERT INTO examdb.cities (name, location) 
-		VALUES (%s, Point(%s , %s));"""
-    
-    for i, row in df.iterrows():
-        city_name = row["AccentCity"]
-        city_long = row["Longitude"]
-        city_lat = row["Latitude"]
-        #sql = "INSERT INTO authors (name) VALUES ('bob');"
-        #large_sql += sql
-        
-        insert_values = (city_name, city_lat, city_long)
-        
-        #print(sql % insert_values)
-        #print("city name: ")
-        #print(type(city_name))
-        #print(counter)
-        
-        mycursor.execute(sql, insert_values)
-        #print(mycursor.statement)
-        
-        if (counter >= interval_counter + interval):
-            print(mycursor.statement)
-            con.commit()
-            interval_counter += interval
-            print(counter)
-            
-        counter += 1
-        
-    #print(large_sql)
-    #mycursor.execute(large_sql, multi = True)
-    con.commit()
-    
-    time_diff = datetime.datetime.now() - now
-    print(time_diff.total_seconds())
+	for i, row in df.iterrows():
+		city_name = row["AccentCity"]
+		city_long = row["Longitude"]
+		city_lat = row["Latitude"]
+		
+		insert_values = (city_name, city_lat, city_long)
+		
+		mycursor.execute(sql, insert_values)
+		
+		if (counter >= interval_counter + commit_interval):
+			print(mycursor.statement)
+			print(sql % insert_values)
+			con.commit()
+			interval_counter += commit_interval
+			print(counter)
+			
+		counter += 1
+		
+	con.commit()
+	
+	time_diff = datetime.datetime.now() - now
+	print("***************************************************")
+	print("Time in seconds: {}".format(time_diff.total_seconds()))
+	print("***************************************************")
+
+def close_con():
+	global con, mycursor
+	mycursor.close()
+	con.close()
+
 
 	
-	
-con.close()
-mycursor.close()
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+clean_cities()
+con, mycursor = open_con()
+insert_cities()
+close_con()
+
+
+
+
+
