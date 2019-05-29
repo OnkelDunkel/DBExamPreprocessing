@@ -6,6 +6,8 @@ import json
 import mysql.connector
 from mysql.connector.cursor import MySQLCursorPrepared
 
+start_from = 1
+
 ram_gb = 2
 mysql_host = "localhost"
 #******************************* missing do sql
@@ -132,8 +134,8 @@ def upload_book(book):
 for file_name in txt_files:
 	#file_name = "617.txt"
 	counter += 1
-    if counter < 1:
-        continue
+	if counter < start_from:
+		continue
 	
 	with open(file_name, 'r') as file:
 		print("***************************************")
