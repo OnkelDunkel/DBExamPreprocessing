@@ -7,8 +7,8 @@ CREATE USER IF NOT EXISTS
 DROP DATABASE IF EXISTS examdb;
 CREATE DATABASE examdb;
 
-GRANT DELETE, INSERT, SELECT, UPDATE ON examdb.* TO dbexamuser@localhost;
-GRANT DELETE, INSERT, SELECT, UPDATE ON examdb.* TO dbexamuser@'%';
+GRANT DELETE, INSERT, SELECT, UPDATE, EXECUTE ON examdb.* TO dbexamuser@localhost;
+GRANT DELETE, INSERT, SELECT, UPDATE, EXECUTE ON examdb.* TO dbexamuser@'%';
 FLUSH PRIVILEGES;
 
 USE examdb;
@@ -17,18 +17,24 @@ CREATE TABLE authors (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	name NVARCHAR(100)
 );
+CREATE INDEX author_name_index ON authors (name) USING BTREE;
+
 CREATE TABLE books (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	title NVARCHAR(1000),
 	authorid INT NOT NULL,
 	FOREIGN KEY (authorid) REFERENCES authors(id)
 );
+CREATE INDEX book_title_index ON books (title) USING BTREE;
+
 CREATE TABLE cities (
 	id INT AUTO_INCREMENT PRIMARY KEY,
 	name NVARCHAR(200),
 	latitude DECIMAL(7,5),
 	longtitude DECIMAL(8,5)
 );
+CREATE INDEX city_name_index ON cities (name) USING BTREE;
+
 CREATE TABLE books_cities (
 	bookid INT NOT NULL,
 	cityid INT NOT NULL,
@@ -69,14 +75,14 @@ delimiter ;
 																					 
 drop procedure if exists create_city_book_relation;
 delimiter $$
-create procedure create_city_book_relation(in book_id int, in city_name nvarchar(200))
+create procedure create_city_book_relation(in city_name nvarchar(200), in book_id int)
 begin
 	DECLARE city_id iNT default 0;
 	set @city_id = 0;
 
 	select id into @city_id from cities where name = city_name limit 1;
 
-	if @city_id is not null and not @city_id = 0 then
+	if @city_id is not null and @city_id > 0 then
 		insert into books_cities(bookid, cityid) values (book_id, @city_id);
 	end if;
 

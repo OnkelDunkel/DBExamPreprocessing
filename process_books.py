@@ -3,8 +3,11 @@ import en_core_web_sm
 import datetime
 import re
 import json
+import mysql.connector
+from mysql.connector.cursor import MySQLCursorPrepared
 
-
+ram_gb = 2
+mysql_host = "localhost"
 #******************************* missing do sql
 
 def get_city_names(text):
@@ -45,7 +48,7 @@ def extract_details(file_text):
 
 nlp = en_core_web_sm.load()
 books = []
-max_file_length = 100000 * 2
+max_file_length = 100000 * ram_gb
 txt_files = [f for f in listdir() if f.endswith(".txt")]
 
 now = datetime.datetime.now()
@@ -70,6 +73,62 @@ def status():
 	print("estimate: {} minutes left".format(((len(txt_files)-counter)/counter)*minutes))
 	print("file {} / {}".format(counter, len(txt_files)))
 
+def connect():
+	con = mysql.connector.connect(
+		host=mysql_host,
+		user="dbexamuser",
+		database="examdb",
+		passwd="dbExam.group7",
+		use_pure=True,
+	)
+	con.autocommit = False
+	mycursor = con.cursor(cursor_class=MySQLCursorPrepared)
+	return con, mycursor
+	
+def upload_book(book):
+	con, mycursor = connect()
+	
+	sql = "call insert_book(%s, %s);"
+	insert_values = (book["title"], book["author"])
+	now = datetime.datetime.now()
+
+	print(insert_values)
+	#print(sql % insert_values)
+	mycursor.execute(sql, insert_values)
+	bookid = mycursor.fetchone()[0]
+	bookid = int(bookid)
+	con.commit()
+	print("first done")
+	
+	mycursor.close()
+	con.close()
+	
+	con, mycursor = connect()
+	
+	sql = "call create_city_book_relation(%s, %s);"
+	
+	for city in book["city_names"]:
+		con, mycursor = connect()
+		insert_tuple = (city, bookid)
+		#print(insert_tuple)
+		try:
+			result = mycursor.execute(sql, insert_tuple)
+			if not result == 0:
+				cityids = mycursor.fetchone()
+			con.commit()
+		except mysql.connector.errors.InterfaceError:
+			print("Invalid city: {}".format(city))
+		except mysql.connector.errors.ProgrammingError:
+			print("Invalid city: {}".format(city))
+		except mysql.connector.errors.IntegrityError:
+			print("duplicate entry: {}".format(insert_tuple))
+		finally:
+			mycursor.close()
+			con.close()
+	
+	time_diff = datetime.datetime.now() - now
+	print(time_diff.total_seconds())
+
 for file_name in txt_files:
 	#file_name = "617.txt"
 	counter += 1
@@ -90,6 +149,7 @@ for file_name in txt_files:
 				print(file_name + "********ERROR FINDING DETAILS*****************")
 				continue
 			
+
 			#print("title: {}".format(title))
 			#print("author: {}".format(author))
 			
@@ -113,10 +173,11 @@ for file_name in txt_files:
 				"author":author,
 				"city_names":city_names,
 			}
-			
+			upload_book(book)
 			books.append(book)
 			
-			print(json.dumps(book))
+			#print(json.dumps(book))
+			
 			
 		except UnicodeDecodeError:
 			total_errors += 1
