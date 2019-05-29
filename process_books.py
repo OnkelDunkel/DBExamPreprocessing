@@ -132,6 +132,8 @@ def upload_book(book):
 for file_name in txt_files:
 	#file_name = "617.txt"
 	counter += 1
+    if counter < 1:
+        continue
 	
 	with open(file_name, 'r') as file:
 		print("***************************************")
@@ -148,7 +150,14 @@ for file_name in txt_files:
 				total_errors += 1
 				print(file_name + "********ERROR FINDING DETAILS*****************")
 				continue
-			
+
+			if len(author) > 100:
+				print("********AUTHORNAME TOO LONG*****************")
+                continue
+
+			if len(title) > 1000:
+				print("********TITLE TOO LONG*****************")
+                continue
 
 			#print("title: {}".format(title))
 			#print("author: {}".format(author))
