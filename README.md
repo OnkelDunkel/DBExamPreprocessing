@@ -1,5 +1,7 @@
 # Database Exam Project
 
+### Group name: The Light
+
 ### Group members: Ali Raza Khan, Mohammed Murad Hossain Sarker, Rasmus Balder Nordbjærg, Yakubu Adeyemi Oseni
 
 
