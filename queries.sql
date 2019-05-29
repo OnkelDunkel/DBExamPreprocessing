@@ -31,7 +31,13 @@ and books_cities.cityid = cities.id;
 
 
 /* query 4 */
-
+select title
+from books, cities_books, cities
+where st_distance_sphere(
+	cities.location, point( 55.6761 , 12.5683 )
+) <= 10000
+and books_cities.cityid = cities.id
+and books_cities.bookid = books.id;
 
 
 
