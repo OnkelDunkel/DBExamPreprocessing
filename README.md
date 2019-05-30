@@ -4,19 +4,22 @@
 
 ### Group members: Ali Raza Khan, Mohammed Murad Hossain Sarker, Rasmus Balder Nordbjærg, Yakubu Adeyemi Oseni
 
+## Databases are used
 
-## Which databases are used?
-We used MySQL and mongodb.
-
-
+We used MySQL and mongodb. We use mongodb because it is high     performance and simple to install. It has the freedom of using JSON or BSON document to store data.
+We use mysql because it is relational database and wide range used including data warehousing, e-commerce. Also, it is free and open source.
 
 ## How data is modeled in the database?
 
-We have insert cityname  and location in the citis table and  insert booktitle and authorid in the books table then create relation between books and authors table. We have also create new table name books_cities for create relationship between books and cities table.
+The data is set up on a DigitalOcean VM:
+
+We have insert cityname  and location in the citis table and  insert booktitle and authorid in the books table then create relation between books and authors table. We have also create new table name books_cities for create many to many relationship between books and cities table.
+
+Due to the lightweightness of our application we are not exactly modelling the data in the application. That is we do not have dedicated classes to store the models in.
 
 ![DB diagram](images/db_diagram.png)
 
-## How the data is imported?
+## Importing the data
 
 ### Getting the .txt book files from the Gutenberg Project
 
@@ -68,6 +71,7 @@ We deleted all the non-txt files:
 
 	find -not -iname "*.txt" -delete
 
+
 ### Getting author and book title from txt
 
 (see process_books.py)
@@ -91,9 +95,11 @@ Using the name entity recognition provided by the spaCy library the entities are
 
 The spaCy library was rather heavy and had a default maximum length of 1,000,000 characters per string. Following the library recommendation we set the max limit to be even lower (ram available * 10,000). Some books exceeded the max length so we cut them into chunks accordingly.
 
+We divided the data into 8 parts and set up 6 DigitalOcean VM and to of our own machines to process the data. We managed to proces and upload around 15.000 books. When everything was running smoothly we reached a speed of processing and uploading around 1500 books per hour.
+
 ### Uploading the books and their city mentions
 
-(see db_setup.sql)
+(see sql/db_setup.sql & load_cities_to_db.ipynb)
 
 In the MySQL database we had created a stored procedure to insert a book. Since the books table contains a foreign key column referencing the authors we need to have an author id before the book can be inserted. Therefore we check whether the author exists and if not we insert into the authors table.
 When creating the insert_book stored procedure we decided that if 2 books with same title have different authors they must be different books. Should we try to insert a book with same author and title as an existing book our system will recognise it as the same book and therefore not perform the insert statement.
@@ -132,22 +138,38 @@ When creating the insert_book stored procedure we decided that if 2 books with s
 	end$$
 	delimiter ;
 
+We called a different stored procedure to update the many to many relation between the books and the cities:
 
+	drop procedure if exists create_city_book_relation;
+	delimiter $$
+	create procedure create_city_book_relation(in city_name nvarchar(200), in book_id int)
+	begin
+		DECLARE city_id iNT default 0;
+		set @city_id = 0;
 
+		select id into @city_id from cities where name = city_name limit 1;
 
+		if @city_id is not null and @city_id > 0 then
+			insert into books_cities(bookid, cityid) values (book_id, @city_id);
+		end if;
 
+		select @city_id;
+	end$$
+	delimiter ;
 
+If a city with the given name does not exists in our database we don insert a book to city relation. The reason for this is because we dont want to store cities in the DB that we dont know the lat and long of. Another reason is that the NLP linbrary we used doesnt distingusih between cities, states and countries.
 
+## The application
 
- 
- 
-Behavior of query test set. Including a discussion on how much of the query runtime is influenced by the DB and what is influenced by the application frontend.
-·        
-Your recommendation, for which database to use in such a project for production.
-·      MySQL is highly organized for its flexibility, high performance, reliable data protection, and ease of managing data. Proper data indexing can resolve your issue with performance, facilitate interaction and ensure robustness.
-·      But if your data is not structured and complex to handle, or if predefining your schema is not coming easy for you, you should better opt for MongoDB. What’s more, if you're required to handle a large volume of data and store it as documents, MongoDB will help you a lot!
-·      The result of two database  One isn’t necessarily better than the other. MongoDB and MySQL both serve in different niches.
-·      But we prefer  for this solution mongodb.
-                     
- 
+(See app.py)
 
+Our application is a python command line application. The application can be run with following commands wihtout parenthesis:
+
+* python app.py (mysql|mongodb) (test|q1|q2|q3|q4) (param1) (param1 only for q4 then longitude)
+
+Running the tests with the mysql database we can see that around 90% of the time was used on the db queries for all the test queries. However this number was even higher for query 1 that was not dealing with maps.
+
+## Recommendation for choice of DB
+
+We will recommend MySQl for this dataset. This is mainly due to the fact that we do not imagine a lot of changes happening to the structure of the data. With MySQL we also have great support for the ACID with foreign keys and transactions.
+The strength of MongoDB is that it is very flexible when it comes to the structure of the data. That can be a benefit in the right situations but in this business we dont imagine changing data structure to be an issue.
