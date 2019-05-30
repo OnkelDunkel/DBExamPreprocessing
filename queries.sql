@@ -41,3 +41,63 @@ and books_cities.bookid = books.id;
 
 
 
+
+select title from books join (
+	select 
+	st_distance_sphere(
+		cities.location, 
+		point( %s , %s )
+	) "dist",
+	books_cities.bookid "book_id"
+	from books_cities, cities
+	where cities.id = books_cities.cityid
+) as city_w_distance
+on books.id = city_w_distance.book_id
+where city_w_distance.dist <= 10000;
+
+
+
+
+
+
+
+
+select title from books join (
+	select 
+	st_distance_sphere(
+		cities.location, 
+		point( %s , %s )
+	) as "dist",
+	books_cities.bookid "book_id"
+	from books_cities, cities
+	where cities.id = books_cities.cityid
+) as city_w_distance
+on books.id = city_w_distance.book_id
+where city_w_distance.dist <= 10000
+limit 1;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -112,17 +112,29 @@ def mysql_q3(param):
 def mysql_q4(param):
 	insert_values = (param[0],param[1])
 	sql = """
-	select title
-	from books, books_cities, cities
-	where st_distance_sphere(
-		cities.location, point( %s , %s )
-	) <= 10000
-	and books_cities.cityid = cities.id
-	and books_cities.bookid = books.id;
+	select title, city_w_distance.dist from books join (
+		select 
+		st_distance_sphere(
+			cities.location, 
+			point( %s , %s )
+		) as "dist",
+		books_cities.bookid "book_id"
+		from books_cities, cities
+		where cities.id = books_cities.cityid
+	) as city_w_distance
+	on books.id = city_w_distance.book_id
+	where city_w_distance.dist < 10000
+	limit 10;
 	"""
+	print("Query not working:")
+	print(sql % insert_values)
+	return
+
+	print(sql % insert_values)
 	result, millis = do_mysql(sql, insert_values)
-	for r in result:
-		print("- '{}'".format(r[0]))
+	print(result)
+	#for r in result:
+		#print("- '{}'".format(r[0]))
 	return millis
 
 	
@@ -158,11 +170,13 @@ def run_q(db_type, query_name, param):
 		now = datetime.datetime.now()
 		db_millis = dbs[db_type][query_name](param)
 		func_millis = (datetime.datetime.now() - now).total_seconds() * 1000
-		print("Function ran for {} milliseconds".format(func_millis))
-		print("The DB query took {} milliseconds".format(db_millis))
+		print("Function ran for {0:.4f} milliseconds".format(func_millis))
+		print("The DB query took {0:.4f} milliseconds".format(db_millis))
 		return func_millis, db_millis
 	except KeyError:
 		print("unknown db type or query")
+	except TypeError:
+		print("function did not finish")
 
 def run_app(db_type, query_name, param):
 	db_type = db_type.lower()
@@ -175,6 +189,43 @@ def run_app(db_type, query_name, param):
 if len(sys.argv) == 4 or len(sys.argv) == 5:
 	#print(sys.argv)
 	run_app(sys.argv[1], sys.argv[2], sys.argv[3:])
+elif len(sys.argv) == 3 and sys.argv[2] == "test":
+	db_type = sys.argv[1]
+	times=[]
+	
+	times.append(run_q(db_type, "q1", ["London"]))
+	times.append(run_q(db_type, "q1", ["Berlin"]))
+	times.append(run_q(db_type, "q1", ["Tokyo"]))
+	times.append(run_q(db_type, "q1", ["Washington"]))
+	times.append(run_q(db_type, "q1", ["Copenhagen"]))
+	
+	
+	times.append(run_q(db_type, "q2", ["The Greatest Thing In the World and Other Addresses"]))
+	times.append(run_q(db_type, "q2", ["Toronto of Old"]))
+	times.append(run_q(db_type, "q2", ["Margery, Volume 5."]))
+	times.append(run_q(db_type, "q2", ["The Four Corners of the World"]))
+	times.append(run_q(db_type, "q2", ["Blackwood's Edinburgh Magazine, Vol. 68, No 422, December 1850"]))
+	
+	times.append(run_q(db_type, "q3", ["Laura F. Kready"]))
+	times.append(run_q(db_type, "q3", ["Maria Louise Pool"]))
+	times.append(run_q(db_type, "q3", ["B. Perez Galdos"]))
+	times.append(run_q(db_type, "q3", ["C. F. Wimberly"]))
+	times.append(run_q(db_type, "q3", ["Robert Folkestone Williams"]))
+	
+	#times.append(run_q(db_type, "q4", [20, 70]))
+	#times.append(run_q(db_type, "q4", [70, 170]))
+	#times.append(run_q(db_type, "q4", [-20, 10]))
+	#times.append(run_q(db_type, "q4", [-10, -170]))
+	#times.append(run_q(db_type, "q4", [1, 7]))
+	
+	func_total = 0
+	db_total = 0
+	for t in times:
+		func_total += t[0]
+		db_total += t[1]
+	print("Total time for functions: {}".format(func_total))
+	print("Total time for db queries: {}".format(db_total))
+	
 elif len(sys.argv) == 2 and sys.argv[1] == "help":
 	print("""
 The application takes in following arguments:
