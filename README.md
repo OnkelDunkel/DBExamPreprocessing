@@ -174,6 +174,8 @@ Our application is a python command line application. The application can be run
 
 Running the tests with the mysql database we can see that around 90% of the time was used on the db queries for all the test queries. However this number was even higher for query 1 that was not dealing with maps.
 
+Unfortunately we did not get to implement the queries in MongDB before we ran out of time. We did however succesfully manage retrieve data from MySQL, convert it into JSON and import it into a database locally. You can see the script for generating JSON files allongside generated files in the folder 'mongo_import'.
+
 ## Recommendation for choice of DB
 
 We will recommend MySQl for this dataset. This is mainly due to the fact that we do not imagine a lot of changes happening to the structure of the data. With MySQL we also have great support for the ACID with foreign keys and transactions.
