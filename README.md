@@ -74,7 +74,7 @@ We deleted all the non-txt files:
 
 ### Getting author and book title from txt
 
-(see process_books.py)
+(see books_processing/process_books.py)
 
 We used below regular expression patterns to extract the author and the book title from the txt files. 
 
@@ -89,7 +89,7 @@ By testing with a sample of 1000 txt files we concluded that around 5% of the fi
 
 ### Using the NLP python library spaCy we extracted all named entities from the books
 
-(see process_books.py)
+(see books_processing/process_books.py)
 
 Using the name entity recognition provided by the spaCy library the entities are divided into types (categories) so we only included entities of type 'GPE' which should include countries, cities and states.
 
