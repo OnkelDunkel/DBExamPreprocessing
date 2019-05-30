@@ -163,6 +163,11 @@ If a city with the given name does not exists in our database we don insert a bo
 
 (See app.py)
 
+In order to run the application you will need to install folium and mysql connector libraries.
+
+	pip install folium
+	pip install mysql-connector-python
+
 Our application is a python command line application. The application can be run with following commands wihtout parenthesis:
 
 * python app.py (mysql|mongodb) (test|q1|q2|q3|q4) (param1) (param1 only for q4 then longitude)
